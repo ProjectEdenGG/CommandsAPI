@@ -2,6 +2,7 @@ package gg.projecteden.commands.models;
 
 import gg.projecteden.commands.Commands;
 import gg.projecteden.commands.exceptions.CustomCommandException;
+import gg.projecteden.commands.exceptions.preconfigured.MissingArgumentException;
 import gg.projecteden.commands.models.annotations.Arg;
 import gg.projecteden.commands.models.annotations.Path;
 import gg.projecteden.commands.models.annotations.Switch;
@@ -57,6 +58,8 @@ class PathParser {
 
 		public TabCompleteHelper(Method method, List<String> realArgs) {
 			this.method = method;
+			this.method.setAccessible(true);
+
 			this.realArgs = realArgs;
 			this.pathArgs = Arrays.asList(method.getAnnotation(Path.class).value().split(" "));
 
@@ -76,6 +79,10 @@ class PathParser {
 
 				if (arg.isVariable()) {
 					arg.setParamIndex(paramIndex++);
+
+					if (arg.getParamIndex() >= method.getParameterCount())
+						throw new MissingArgumentException("Missing arguments for method: " + method.getName());
+
 					Parameter parameter = method.getParameters()[arg.getParamIndex()];
 					Arg annotation = parameter.getAnnotation(Arg.class);
 					if (annotation != null && !isNullOrEmpty(annotation.permission()))
