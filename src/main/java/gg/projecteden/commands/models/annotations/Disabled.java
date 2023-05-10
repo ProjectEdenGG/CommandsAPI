@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 /**
  * Disables a path or entire command
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Disabled {
 }
