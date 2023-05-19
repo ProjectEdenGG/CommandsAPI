@@ -106,6 +106,12 @@ class PathParser {
 							}
 					}
 
+					if (Commands.getInstance().getAdditionalTabCompleters() != null && arg.getTabCompleter() == null) {
+						Class<?> clazz = Commands.getInstance().getAdditionalTabCompleters().apply(arg.type);
+						if (clazz != null)
+							arg.setTabCompleter(clazz);
+					}
+
 					if (finalTabCompleter == null) {
 						if (arg.getPathArg() != null && arg.getPathArg().contains("...")) {
 							finalType = arg.getType();

@@ -7,6 +7,7 @@ import gg.projecteden.commands.models.annotations.DoubleSlash;
 import gg.projecteden.commands.models.annotations.TabCompleterFor;
 import gg.projecteden.commands.util.Env;
 import gg.projecteden.commands.util.StringUtils;
+import gg.projecteden.commands.util.TriFunction;
 import gg.projecteden.commands.util.Utils;
 import lombok.Getter;
 import lombok.NonNull;
@@ -22,6 +23,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.logging.Level;
 
 import static gg.projecteden.commands.util.ReflectionUtils.methodsAnnotatedWith;
@@ -36,6 +39,11 @@ public class Commands {
 	@Getter
 	private final Plugin plugin;
 	private Env env = Env.PROD;
+	@Getter
+	private TriFunction<String, Class<?>, CustomCommand, Object> additionalConverters;
+	@Getter
+	private Function<Class<?>, Class<?>> additionalTabCompleters;
+
 	@Getter
 	private final CommandMapUtils mapUtils;
 	private final Set<Class<? extends CustomCommand>> commandSet;
@@ -65,13 +73,27 @@ public class Commands {
 		return this;
 	}
 
-	public Commands scan(String path) {
-		this.commandSet.addAll(subTypesOf(CustomCommand.class, path));
+	public Commands scan(ClassLoader classLoader, String... path) {
+		this.commandSet.addAll(subTypesOf(CustomCommand.class, classLoader, path));
 		return this;
+	}
+
+	public Commands scan(String... path) {
+		return this.scan(null, path);
 	}
 
 	public Commands env(Env env) {
 		this.env = env;
+		return this;
+	}
+
+	public Commands additionalConverts(TriFunction<String, Class<?>, CustomCommand, Object> converters) {
+		this.additionalConverters = converters;
+		return this;
+	}
+
+	public Commands additionalTabCompleters(Function<Class<?>, Class<?>> tabCompleters) {
+		this.additionalTabCompleters = tabCompleters;
 		return this;
 	}
 
@@ -152,14 +174,15 @@ public class Commands {
 		return StringUtils.getPrefix(prettyName(clazz));
 	}
 
-	public void registerAll() {
+	public Commands registerAll() {
 		registerConvertersAndTabCompleters();
 		Commands.debug(" Registering " + commandSet.size() + StringUtils.plural(" command", commands.size()));
 		commandSet.forEach(this::register);
 		Commands.log("Registered " + commands.size() + StringUtils.plural(" command", commands.size()));
+		return this;
 	}
 
-	private void register(Class<? extends CustomCommand>... customCommands) {
+	public Commands register(Class<? extends CustomCommand>... customCommands) {
 		for (Class<? extends CustomCommand> clazz : customCommands)
 			try {
 				if (Utils.canEnable(clazz))
@@ -168,6 +191,7 @@ public class Commands {
 				plugin.getLogger().info("Error while registering command " + prettyName(clazz));
 				ex.printStackTrace();
 			}
+		return this;
 	}
 
 	private void registerExcept(Class<? extends CustomCommand>... customCommands) {
@@ -256,5 +280,4 @@ public class Commands {
 			}
 		});
 	}
-
 }

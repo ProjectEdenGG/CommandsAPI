@@ -223,8 +223,6 @@ public abstract class ICustomCommand {
 		String pathValue = method.getAnnotation(Path.class).value();
 		Iterator<String> path = Arrays.asList(pathValue.split(" ")).iterator();
 
-		// TODO: Validate params and path have same args
-
 		int i = 0;
 		int pathIndex = 0;
 		for (Parameter parameter : parameters) {
@@ -327,6 +325,11 @@ public abstract class ICustomCommand {
 					throw new CustomCommandException("Unknown converter parameters in " + converter.getName());
 			} else if (type.isEnum()) {
 				return convertToEnum(value, (Class<? extends Enum<?>>) type);
+			}
+			else if (Commands.getInstance().getAdditionalConverters() != null) {
+				Object val = Commands.getInstance().getAdditionalConverters().apply(value, type, command);
+				if (val != null)
+					return val;
 			}
 		} catch (InvocationTargetException ex) {
 			if (Commands.isDebug())

@@ -1,6 +1,5 @@
 package gg.projecteden.commands.util;
 
-import gg.projecteden.commands.Commands;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
 import org.jetbrains.annotations.NotNull;
@@ -18,12 +17,6 @@ import java.util.stream.Collectors;
 
 public class ReflectionUtils {
 
-	/**
-	 * Returns a list of superclasses, including the provided class
-	 *
-	 * @param clazz subclass
-	 * @return superclasses
-	 */
 	public static <T> List<Class<? extends T>> superclassesOf(Class<? extends T> clazz) {
 		List<Class<? extends T>> superclasses = new ArrayList<>();
 		while (clazz.getSuperclass() != Object.class) {
@@ -35,8 +28,8 @@ public class ReflectionUtils {
 		return superclasses;
 	}
 
-	public static <T> Set<Class<? extends T>> subTypesOf(Class<T> superclass, String... packages) {
-		return getClasses(packages, subclass -> {
+	public static <T> Set<Class<? extends T>> subTypesOf(Class<T> superclass, ClassLoader classLoader, String... packages) {
+		return getClasses(packages, classLoader, subclass -> {
 			if (!Utils.canEnable(subclass))
 				return false;
 
@@ -45,17 +38,6 @@ public class ReflectionUtils {
 			else
 				return subclass.extendsSuperclass(superclass);
 		});
-	}
-
-	@SuppressWarnings("unchecked")
-	public static <T> Set<Class<? extends T>> typesAnnotatedWith(Class<? extends Annotation> annotation, String... packages) {
-		try (var scan = scanPackages(packages).scan()) {
-			return scan.getClassesWithAnnotation(annotation).stream()
-					       .filter(Utils::canEnable)
-					       .map(ClassInfo::loadClass)
-					       .map(clazz -> (Class<? extends T>) clazz)
-					       .collect(Collectors.toSet());
-		}
 	}
 
 	public static Set<Method> methodsAnnotatedWith(Class<?> clazz, Class<? extends Annotation> annotation) {
@@ -68,22 +50,22 @@ public class ReflectionUtils {
 		}};
 	}
 
-	private static ClassGraph scanPackages(String... packages) {
+	private static ClassGraph scanPackages(ClassLoader loader, String... packages) {
 		final ClassGraph scanner = new ClassGraph()
 				                           .acceptPackages(packages)
 				                           .enableClassInfo()
 				                           .enableAnnotationInfo()
 				                           .initializeLoadedClasses();
 
-		if (Commands.getInstance().getPlugin().getClass().getClassLoader() != null)
-			scanner.overrideClassLoaders(Commands.getInstance().getPlugin().getClass().getClassLoader());
+		if (loader != null)
+			scanner.overrideClassLoaders(loader);
 
 		return scanner;
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T> Set<Class<? extends T>> getClasses(String[] packages, Predicate<ClassInfo> filter) {
-		try (var scan = scanPackages(packages).scan()) {
+	private static <T> Set<Class<? extends T>> getClasses(String[] packages, ClassLoader classLoader, Predicate<ClassInfo> filter) {
+		try (var scan = scanPackages(classLoader, packages).scan()) {
 			return scan.getAllClasses().stream()
 					       .filter(filter)
 					       .map(ClassInfo::loadClass)

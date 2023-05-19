@@ -716,7 +716,7 @@ public abstract class CustomCommand extends ICustomCommand {
 	}
 
 	@ConverterFor(Location.class)
-	Location convertToLocation(String value) {
+	public Location convertToLocation(String value) {
 		if ("current".equalsIgnoreCase(value))
 			return location();
 		if ("target".equalsIgnoreCase(value))
@@ -726,7 +726,7 @@ public abstract class CustomCommand extends ICustomCommand {
 	}
 
 	@ConverterFor(World.class)
-	World convertToWorld(String value) {
+	public World convertToWorld(String value) {
 		if ("current".equalsIgnoreCase(value))
 			return world();
 		if ("null".equalsIgnoreCase(value))
@@ -738,7 +738,7 @@ public abstract class CustomCommand extends ICustomCommand {
 	}
 
 	@TabCompleterFor(World.class)
-	List<String> tabCompleteWorld(String filter) {
+	public List<String> tabCompleteWorld(String filter) {
 		return Bukkit.getWorlds().stream()
 				.map(World::getName)
 				.filter(name -> name.toLowerCase().startsWith(filter.toLowerCase()))
@@ -746,14 +746,14 @@ public abstract class CustomCommand extends ICustomCommand {
 	}
 
 	@TabCompleterFor(Boolean.class)
-	List<String> tabCompleteBoolean(String filter) {
+	public List<String> tabCompleteBoolean(String filter) {
 		return Stream.of("true", "false")
 				.filter(bool -> bool.toLowerCase().startsWith(filter.toLowerCase()))
 				.collect(toList());
 	}
 
 	@ConverterFor(ItemStack.class)
-	ItemStack convertToItemStack(String value) {
+	public ItemStack convertToItemStack(String value) {
 		List<Supplier<ItemStack>> converters = List.of(
 			() -> new ItemStack(convertToMaterial(value))
 		);
@@ -768,14 +768,14 @@ public abstract class CustomCommand extends ICustomCommand {
 	}
 
 	@TabCompleterFor(ItemStack.class)
-	List<String> tabCompleteItemStack(String filter) {
+	public List<String> tabCompleteItemStack(String filter) {
 		return new ArrayList<>() {{
 			addAll(tabCompleteMaterial(filter));
 		}};
 	}
 
 	@ConverterFor(Material.class)
-	Material convertToMaterial(String value) {
+	public Material convertToMaterial(String value) {
 		if (isInt(value))
 			return Material.values()[Integer.parseInt(value)];
 
@@ -796,14 +796,14 @@ public abstract class CustomCommand extends ICustomCommand {
 	}
 
 	@TabCompleterFor(Material.class)
-	List<String> tabCompleteMaterial(String value) {
+	public List<String> tabCompleteMaterial(String value) {
 		List<String> results = tabCompleteEnum(value, Material.class);
 		results.remove(Material.COMMAND_BLOCK_MINECART.name().toLowerCase());
 		return results;
 	}
 
 	@ConverterFor(ChatColor.class)
-	ChatColor convertToChatColor(String value) {
+	public ChatColor convertToChatColor(String value) {
 		if (StringUtils.getHexPattern().matcher(value).matches())
 			return ChatColor.of(value.replaceFirst("&", ""));
 
@@ -815,12 +815,12 @@ public abstract class CustomCommand extends ICustomCommand {
 	}
 
 	@TabCompleterFor(ChatColor.class)
-	List<String> tabCompleteChatColor(String filter) {
+	public List<String> tabCompleteChatColor(String filter) {
 		return tabCompleteEnum(filter, ColorType.class);
 	}
 
 	@ConverterFor(ColorType.class)
-	ColorType convertToColorType(String value) {
+	public ColorType convertToColorType(String value) {
 		ColorType color = ColorType.of(value.replace('_', ' ').toLowerCase());
 		if (color == null)
 			throw new InvalidInputException("Color &e" + value + "&c not found");
@@ -828,7 +828,7 @@ public abstract class CustomCommand extends ICustomCommand {
 	}
 
 	@TabCompleterFor(ColorType.class)
-	List<String> tabCompleteColorType(String filter) {
+	public List<String> tabCompleteColorType(String filter) {
 		return Arrays.stream(ColorType.values())
 				.map(ColorType::getName)
 				.filter(name -> name.replace(' ', '_').startsWith(filter.toLowerCase()))
@@ -856,12 +856,12 @@ public abstract class CustomCommand extends ICustomCommand {
 	}
 
 	@ConverterFor(Timespan.class)
-	Timespan convertToTimespan(String input) {
+	public Timespan convertToTimespan(String input) {
 		return Timespan.of(input);
 	}
 
 	@ConverterFor(Enchantment.class)
-	Enchantment convertToEnchantment(String value) {
+	public Enchantment convertToEnchantment(String value) {
 		Enchantment enchantment = Enchantment.getByKey(NamespacedKey.minecraft(value));
 		if (enchantment == null) {
 			enchantment = Enchantment.getByName(value);
@@ -872,7 +872,7 @@ public abstract class CustomCommand extends ICustomCommand {
 	}
 
 	@TabCompleterFor(Enchantment.class)
-	List<String> applicableEnchantmentsTabCompleter(String filter) {
+	public List<String> applicableEnchantmentsTabCompleter(String filter) {
 		List<String> results = new ArrayList<>();
 		try {
 			List<String> enchants = ItemUtils.getApplicableEnchantments(getToolRequired()).stream()
@@ -896,7 +896,7 @@ public abstract class CustomCommand extends ICustomCommand {
 	}
 
 	@TabCompleterFor(LivingEntity.class)
-	protected List<String> tabCompleteLivingEntity(String value) {
+	public List<String> tabCompleteLivingEntity(String value) {
 		return new ArrayList<>() {{
 			for (EntityType entityType : EntityType.values()) {
 				Class<? extends Entity> entityClass = entityType.getEntityClass();
